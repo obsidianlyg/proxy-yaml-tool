@@ -1,0 +1,18 @@
+services:
+  proxy-yaml-tool:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: proxy-yaml-tool:latest
+    container_name: proxy-yaml-tool
+    restart: unless-stopped
+    ports:
+      # 默认仅绑定本机回环地址，与直接运行保持一致的安全边界。
+      # 如需局域网或远程访问，可通过 LISTEN_HOST=0.0.0.0 启动，或改为 "8732:8732"。
+      - "${LISTEN_HOST:-127.0.0.1}:${LISTEN_PORT:-8732}:8732"
+    # 镜像已内置默认 template.yaml；如需使用自定义模板，取消下面注释并替换为本机模板路径：
+    # volumes:
+    #   - ./template.yaml:/app/template.yaml:ro
+    read_only: true
+    security_opt:
+      - no-new-privileges:true

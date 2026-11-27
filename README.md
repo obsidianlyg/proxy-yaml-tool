@@ -58,6 +58,9 @@ run.command         macOS 启动脚本（源码目录）
 static/             HTML / CSS / JavaScript 源文件（源码目录）
 *.go                Go 源文件（源码目录）
 go.mod / go.sum     Go 依赖声明（源码目录）
+Dockerfile          Docker 多阶段构建文件（镜像内置默认 template.yaml）
+docker-compose.yml  Docker Compose 编排配置
+.dockerignore       Docker 构建忽略清单
 ```
 
 当前目录的 `template.yaml` 从外层模板复制，已清空 `proxies` 及代理组中的旧节点引用。自动选择、故障转移组暂时为空；导入节点时保留“将新节点加入已有代理组”选项，会自动填充它们。请先导入节点再将结果用于 Clash Verge。
@@ -100,6 +103,59 @@ http://127.0.0.1:8732
 ```
 
 终端按 `Ctrl+C` 停止。程序默认在前台运行，不会自动设置开机启动。
+
+## 使用 Docker / Docker Compose 运行
+
+镜像使用多阶段构建，基于 Alpine 打包静态编译二进制、CA 证书（用于国家 / 地区查询）以及默认的 `template.yaml`，以非 root 用户运行。
+
+### 使用 Docker Compose
+
+在项目根目录执行：
+
+```sh
+docker compose up -d --build
+```
+
+默认仅绑定宿主机回环地址，打开 `http://127.0.0.1:8732` 即可使用。
+
+如需更换端口或允许远程访问，可通过环境变量指定监听地址和端口：
+
+```sh
+LISTEN_HOST=0.0.0.0 LISTEN_PORT=8732 docker compose up -d --build
+```
+
+远程访问时页面和订阅同样无需登录，请注意配置服务器防火墙或云安全组。
+
+如需使用自定义模板，可在 `docker-compose.yml` 中取消 `volumes` 注释并挂载自己的模板文件：
+
+```yaml
+volumes:
+  - /path/to/your/template.yaml:/app/template.yaml:ro
+```
+
+停止并移除容器：
+
+```sh
+docker compose down
+```
+
+### 直接使用 Docker
+
+构建并运行镜像：
+
+```sh
+docker build -t proxy-yaml-tool .
+docker run -d --name proxy-yaml-tool -p 127.0.0.1:8732:8732 proxy-yaml-tool
+```
+
+使用自定义模板运行：
+
+```sh
+docker run -d --name proxy-yaml-tool \
+  -p 127.0.0.1:8732:8732 \
+  -v /path/to/your/template.yaml:/app/template.yaml:ro \
+  proxy-yaml-tool
+```
 
 ## 从源码编译
 

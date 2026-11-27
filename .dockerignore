@@ -1,0 +1,14 @@
+.git
+.gitignore
+.cache
+.qa
+.DS_Store
+dist
+proxy-yaml-web
+*_test.go
+README.md
+Dockerfile
+docker-compose.yml
+.dockerignore
+run.sh
+run.command
